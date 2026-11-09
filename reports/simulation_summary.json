@@ -1,0 +1,240 @@
+{
+  "drift_start_day": 90,
+  "first_alert_day": 97,
+  "false_alerts_before_drift": 0,
+  "monthly": [
+    {
+      "month": 0,
+      "frozen_macro_f1": 0.9952,
+      "cycle_macro_f1": 0.9952,
+      "frozen_accuracy": 0.9953,
+      "cycle_accuracy": 0.9953
+    },
+    {
+      "month": 1,
+      "frozen_macro_f1": 0.9959,
+      "cycle_macro_f1": 0.9959,
+      "frozen_accuracy": 0.996,
+      "cycle_accuracy": 0.996
+    },
+    {
+      "month": 2,
+      "frozen_macro_f1": 0.9955,
+      "cycle_macro_f1": 0.9955,
+      "frozen_accuracy": 0.9947,
+      "cycle_accuracy": 0.9947
+    },
+    {
+      "month": 3,
+      "frozen_macro_f1": 0.7905,
+      "cycle_macro_f1": 0.8588,
+      "frozen_accuracy": 0.776,
+      "cycle_accuracy": 0.842
+    },
+    {
+      "month": 4,
+      "frozen_macro_f1": 0.7776,
+      "cycle_macro_f1": 0.9919,
+      "frozen_accuracy": 0.7533,
+      "cycle_accuracy": 0.9893
+    },
+    {
+      "month": 5,
+      "frozen_macro_f1": 0.7806,
+      "cycle_macro_f1": 0.9921,
+      "frozen_accuracy": 0.748,
+      "cycle_accuracy": 0.9927
+    }
+  ],
+  "events": [
+    {
+      "day": -1,
+      "event": "bootstrap",
+      "version": "1",
+      "golden_macro_f1": 0.9943
+    },
+    {
+      "day": 97,
+      "event": "drift_alert",
+      "drift_share": 0.4,
+      "drifted": [
+        "oov_share",
+        "confidence",
+        "emb_1",
+        "pred"
+      ],
+      "prediction_p_value": 8.255108753422582e-05
+    },
+    {
+      "day": 104,
+      "event": "retrain",
+      "gate_passed": true,
+      "reasons": [],
+      "candidate_macro_f1": 0.9969,
+      "production_macro_f1": 0.8619,
+      "n_train": 4438,
+      "n_golden": 321,
+      "train_seconds": 22.3,
+      "pipeline_seconds": 24.8
+    },
+    {
+      "day": 107,
+      "event": "shadow_done",
+      "disagreement": 0.227,
+      "passed": true
+    },
+    {
+      "day": 111,
+      "event": "canary_done",
+      "canary_accuracy": 1.0,
+      "production_accuracy": 0.75,
+      "n_canary": 16,
+      "passed": true
+    },
+    {
+      "day": 111,
+      "event": "promoted",
+      "version": "2",
+      "days_from_labels_to_production": 7
+    },
+    {
+      "day": 125,
+      "event": "drift_alert",
+      "drift_share": 0.2,
+      "drifted": [
+        "confidence",
+        "pred"
+      ],
+      "prediction_p_value": 3.3468904793808927e-12
+    },
+    {
+      "day": 132,
+      "event": "retrain",
+      "gate_passed": true,
+      "reasons": [],
+      "candidate_macro_f1": 0.9918,
+      "production_macro_f1": 0.9793,
+      "n_train": 4456,
+      "n_golden": 290,
+      "train_seconds": 23.0,
+      "pipeline_seconds": 25.5
+    },
+    {
+      "day": 135,
+      "event": "shadow_done",
+      "disagreement": 0.007,
+      "passed": true
+    },
+    {
+      "day": 139,
+      "event": "canary_done",
+      "canary_accuracy": 1.0,
+      "production_accuracy": 0.986,
+      "n_canary": 32,
+      "passed": true
+    },
+    {
+      "day": 139,
+      "event": "promoted",
+      "version": "3",
+      "days_from_labels_to_production": 7
+    }
+  ],
+  "sim_wall_seconds": 285.1,
+  "detection_delay_days": 7,
+  "promotion_day": 111,
+  "days_alert_to_production": 14,
+  "days_labels_to_production": 7,
+  "automated_pipeline_seconds": 24.8,
+  "retrain_train_seconds": 22.3,
+  "after_promotion": {
+    "frozen_macro_f1": 0.7774,
+    "cycle_macro_f1": 0.9894
+  },
+  "before_drift": {
+    "frozen_macro_f1": 0.9955
+  },
+  "rollback": {
+    "from_version": 3,
+    "to_version": 2,
+    "seconds": 0.28
+  },
+  "gate_drill": {
+    "scenarios": [
+      {
+        "scenario": "clean",
+        "intentionally_bad": false,
+        "passed": true,
+        "candidate_macro_f1": 0.9945,
+        "production_macro_f1": 0.9974,
+        "worst_class": "INVOICE",
+        "worst_drop_pp": 1.9,
+        "reasons": []
+      },
+      {
+        "scenario": "random_flip_10pct",
+        "intentionally_bad": true,
+        "passed": true,
+        "candidate_macro_f1": 0.9974,
+        "production_macro_f1": 0.9974,
+        "worst_class": null,
+        "worst_drop_pp": 0.0,
+        "reasons": []
+      },
+      {
+        "scenario": "random_flip_40pct",
+        "intentionally_bad": true,
+        "passed": false,
+        "candidate_macro_f1": 0.9907,
+        "production_macro_f1": 0.9974,
+        "worst_class": "FEEDBACK",
+        "worst_drop_pp": 2.0,
+        "reasons": [
+          "macro-F1 0.991 vs production 0.997 (delta -0.007)"
+        ]
+      },
+      {
+        "scenario": "swap_delivery_to_shipping",
+        "intentionally_bad": true,
+        "passed": false,
+        "candidate_macro_f1": 0.9313,
+        "production_macro_f1": 0.9974,
+        "worst_class": "DELIVERY",
+        "worst_drop_pp": 42.1,
+        "reasons": [
+          "macro-F1 0.931 vs production 0.997 (delta -0.066)",
+          "class DELIVERY dropped by 42.1 pp (> 8.0)"
+        ]
+      },
+      {
+        "scenario": "swap_order_to_cancel",
+        "intentionally_bad": true,
+        "passed": false,
+        "candidate_macro_f1": 0.9299,
+        "production_macro_f1": 0.9974,
+        "worst_class": "ORDER",
+        "worst_drop_pp": 21.5,
+        "reasons": [
+          "macro-F1 0.930 vs production 0.997 (delta -0.067)",
+          "class ORDER dropped by 21.5 pp (> 8.0)"
+        ]
+      },
+      {
+        "scenario": "swap_account_to_contact",
+        "intentionally_bad": true,
+        "passed": false,
+        "candidate_macro_f1": 0.9273,
+        "production_macro_f1": 0.9974,
+        "worst_class": "CONTACT",
+        "worst_drop_pp": 38.3,
+        "reasons": [
+          "macro-F1 0.927 vs production 0.997 (delta -0.070)",
+          "class CONTACT dropped by 38.3 pp (> 8.0)"
+        ]
+      }
+    ],
+    "blocked_bad_share": 0.8,
+    "blocked_systematic_share": 1.0,
+    "clean_passed": true
+  }
+}

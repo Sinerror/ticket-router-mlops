@@ -1,0 +1,97 @@
+# Local "production-like" stand: MLflow (+Postgres), inference service, Airflow, Prometheus, Grafana.
+# Training of the first model runs on the host GPU:  make bootstrap   (see README)
+name: ticketflow
+
+x-airflow-env: &airflow-env
+  AIRFLOW__CORE__EXECUTOR: LocalExecutor
+  AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
+  AIRFLOW__CORE__LOAD_EXAMPLES: "False"
+  AIRFLOW__CORE__DAGS_FOLDER: /opt/ticketflow/dags
+  AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "False"
+  AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_ALL_ADMINS: "True"
+  AIRFLOW__DAG_PROCESSOR__REFRESH_INTERVAL: "30"
+  MLFLOW_TRACKING_URI: http://mlflow:5000
+  SERVICE_URL: http://service:8000
+  ADMIN_TOKEN: ${ADMIN_TOKEN:-change-me}
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./docker/postgres-init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 5s
+      retries: 20
+
+  mlflow:
+    build: { context: ., dockerfile: docker/mlflow.Dockerfile }
+    command: >
+      mlflow server --host 0.0.0.0 --port 5000 --workers 2
+      --backend-store-uri postgresql+psycopg2://mlflow:mlflow@postgres/mlflow
+      --artifacts-destination /mlartifacts --serve-artifacts
+      --allowed-hosts mlflow,mlflow:5000,localhost,localhost:5000,127.0.0.1,127.0.0.1:5000
+    ports: ["5000:5000"]
+    volumes: [mlartifacts:/mlartifacts]
+    depends_on:
+      postgres: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5000/health')"]
+      interval: 10s
+      retries: 30
+
+  service:
+    build: { context: ., dockerfile: docker/service.Dockerfile }
+    environment:
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+      ROLLOUT_MODE: shadow
+      CANARY_FRACTION: "0.2"
+      ALIAS_POLL_SECONDS: "30"
+      PREDICTION_LOG: /data/state/predictions.jsonl
+      ADMIN_TOKEN: ${ADMIN_TOKEN:-change-me}
+    ports: ["8000:8000"]
+    volumes: ["./data/state:/data/state"]
+    depends_on:
+      mlflow: { condition: service_healthy }
+    restart: on-failure
+
+  airflow:
+    build: { context: ., dockerfile: docker/airflow.Dockerfile }
+    command: standalone
+    environment: *airflow-env
+    # Retraining uses the host GPU (Docker Desktop + WSL2 / NVIDIA Container Toolkit).
+    # Without a GPU, remove this block: training falls back to CPU automatically.
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    ports: ["8080:8080"]
+    volumes: ["./:/opt/ticketflow"]
+    depends_on:
+      postgres: { condition: service_healthy }
+      mlflow: { condition: service_healthy }
+
+  prometheus:
+    image: prom/prometheus:v3.15.0
+    volumes: ["./docker/prometheus.yml:/etc/prometheus/prometheus.yml:ro"]
+    ports: ["9090:9090"]
+
+  grafana:
+    image: grafana/grafana:13.0.12
+    environment:
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Admin
+      GF_AUTH_DISABLE_LOGIN_FORM: "true"
+    volumes: ["./docker/grafana/provisioning:/etc/grafana/provisioning:ro"]
+    ports: ["3000:3000"]
+    depends_on: [prometheus]
+
+volumes:
+  pgdata:
+  mlartifacts:

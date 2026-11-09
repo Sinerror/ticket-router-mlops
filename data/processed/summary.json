@@ -1,0 +1,34 @@
+{
+  "unique_texts": 18170,
+  "history": 2500,
+  "stream": 9000,
+  "labels": [
+    "ACCOUNT",
+    "CANCEL",
+    "CONTACT",
+    "DELIVERY",
+    "FEEDBACK",
+    "INVOICE",
+    "ORDER",
+    "PAYMENT",
+    "REFUND",
+    "SHIPPING",
+    "SUBSCRIPTION"
+  ],
+  "surge_share_by_month": {
+    "0": 0.0,
+    "1": 0.0,
+    "2": 0.0,
+    "3": 0.215,
+    "4": 0.24,
+    "5": 0.244
+  },
+  "noisy_share_by_month": {
+    "0": 0.1,
+    "1": 0.087,
+    "2": 0.101,
+    "3": 0.699,
+    "4": 0.741,
+    "5": 0.761
+  }
+}

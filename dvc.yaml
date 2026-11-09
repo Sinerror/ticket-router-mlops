@@ -1,0 +1,42 @@
+stages:
+  download:
+    cmd: python -m ticketflow download
+    params:
+      - data.hf_dataset
+      - data.hf_file
+    outs:
+      - data/raw/support_ru.csv
+
+  prepare:
+    cmd: python -m ticketflow prepare
+    deps:
+      - data/raw/support_ru.csv
+      - src/ticketflow/data.py
+    params:
+      - data
+    outs:
+      - data/processed/history.parquet
+      - data/processed/stream.parquet
+      - data/processed/labels.json
+    metrics:
+      - data/processed/summary.json:
+          cache: false
+
+  simulate:
+    cmd: python -m ticketflow simulate
+    deps:
+      - data/processed/history.parquet
+      - data/processed/stream.parquet
+      - data/processed/labels.json
+      - src/ticketflow
+    params:
+      - train
+      - gate
+      - drift
+      - rollout
+    metrics:
+      - reports/simulation_summary.json:
+          cache: false
+    plots:
+      - reports/macro_f1_by_day.png:
+          cache: false

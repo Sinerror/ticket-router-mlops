@@ -1,0 +1,17 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+
+# produced by the pipeline (data files are ignored by DVC-generated .gitignore files, models live in MLflow)
+/data/state/
+/artifacts/
+/mlartifacts/
+/mlflow.db
+/reports/drift/
+/reports/drift_alert_day*.html
+/data/raw/support_ru.csv
+/data/processed/history.parquet
+/data/processed/stream.parquet
+/data/processed/labels.json

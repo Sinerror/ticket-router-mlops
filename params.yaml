@@ -1,0 +1,81 @@
+# Single source of truth for all pipeline parameters (tracked by DVC, logged to MLflow).
+
+data:
+  hf_dataset: mkaiuse/Support_Contact_Center_RU_27000
+  hf_file: Support_Training_Dataset_27K_RU.csv
+  seed: 42
+  # "History" labelled before the simulation starts: the first production model is trained on it.
+  history_size: 2500
+  n_months: 6
+  days_per_month: 30
+  tickets_per_day: 50
+  # Month (0-based) in which the shift starts.
+  drift_month: 3
+  # New theme: a topic that did not exist before (new returns policy launched) and suddenly surges.
+  # The class is part of the routing taxonomy from day one, but there are no labelled examples yet.
+  surge_class: REFUND
+  surge_share_before: 0.0
+  surge_share_after: 0.25
+  # Lexical shift: share of colloquial / typo / offensive phrasing (dataset flags Q, Z).
+  noisy_flags: QZ
+  noisy_share_before: 0.10
+  noisy_share_after: 0.75
+  # Share of daily traffic that operators label (ground truth arrives with a lag).
+  label_fraction: 0.5
+
+train:
+  model_name: cointegrated/rubert-tiny2
+  max_len: 64
+  epochs: 4
+  batch_size: 32
+  lr: 6.0e-5
+  weight_decay: 0.01
+  warmup_ratio: 0.1
+  # Retraining uses labelled tickets from the last N days (plus the history set).
+  train_window_days: 90
+  # Golden set for the quality gate: a held-out share of the freshest labelled tickets
+  # (in production these labels are double-checked by a senior operator).
+  golden_days: 30
+  golden_fraction: 0.4
+  bootstrap_golden_fraction: 0.2
+
+gate:
+  # "Not worse than production": macro-F1 delta on the golden set, with a small tolerance for label noise.
+  min_macro_f1_delta: -0.005
+  # No class may drop by more than N percentage points of F1 ...
+  max_class_drop_pp: 8.0
+  # ... checked only for classes with enough golden examples (one error in 10 examples is not a signal).
+  min_class_support: 15
+  # Absolute floor: never ship a model below this macro-F1.
+  min_macro_f1: 0.70
+
+drift:
+  window_days: 5
+  # Per-feature KS test p-value below which a numeric feature counts as drifted.
+  ks_p_value: 0.01
+  # Alert when at least this share of monitored features drifted ...
+  drift_share_threshold: 0.4
+  # ... or the prediction distribution drifted (chi-square p-value).
+  prediction_p_value: 0.0001
+  # The condition must hold on N consecutive daily checks (thresholds calibrated on pre-drift months:
+  # 0 false alerts in 90 days, see README).
+  persistence_checks: 2
+  n_embedding_components: 5
+  # Days the same alert is suppressed after it fired (retraining is in progress).
+  cooldown_days: 14
+
+rollout:
+  # After the alert: wait for operators to label fresh tickets (SLA).
+  labeling_lag_days: 7
+  shadow_days: 3
+  canary_days: 4
+  canary_fraction: 0.2
+  # Shadow: block promotion if candidate disagrees with production on more than this share of traffic.
+  max_shadow_disagreement: 0.6
+  # Canary: block promotion if canary accuracy (on labelled canary traffic) is worse than production by > N pp.
+  max_canary_drop_pp: 2.0
+
+serving:
+  model_name: ticket-router
+  production_alias: production
+  candidate_alias: challenger

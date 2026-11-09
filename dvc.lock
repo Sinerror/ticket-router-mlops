@@ -1,0 +1,59 @@
+schema: '2.0'
+stages:
+  download:
+    cmd: python -m ticketflow download
+    params:
+      params.yaml:
+        data.hf_dataset: mkaiuse/Support_Contact_Center_RU_27000
+        data.hf_file: Support_Training_Dataset_27K_RU.csv
+    outs:
+    - path: data/raw/support_ru.csv
+      hash: md5
+      md5: 4447d6ab4567020ae4f86347258386bb
+      size: 35484537
+  prepare:
+    cmd: python -m ticketflow prepare
+    deps:
+    - path: data/raw/support_ru.csv
+      hash: md5
+      md5: 4447d6ab4567020ae4f86347258386bb
+      size: 35484537
+    - path: src/ticketflow/data.py
+      hash: md5
+      md5: 0d91fbe854736c0ea035f9e5bae3a3ac
+      size: 6682
+    params:
+      params.yaml:
+        data:
+          hf_dataset: mkaiuse/Support_Contact_Center_RU_27000
+          hf_file: Support_Training_Dataset_27K_RU.csv
+          seed: 42
+          history_size: 2500
+          n_months: 6
+          days_per_month: 30
+          tickets_per_day: 50
+          drift_month: 3
+          surge_class: REFUND
+          surge_share_before: 0.0
+          surge_share_after: 0.25
+          noisy_flags: QZ
+          noisy_share_before: 0.1
+          noisy_share_after: 0.75
+          label_fraction: 0.5
+    outs:
+    - path: data/processed/history.parquet
+      hash: md5
+      md5: 415e5586dce9c754fdb61571495de740
+      size: 88240
+    - path: data/processed/labels.json
+      hash: md5
+      md5: b56d5103149a30e647ac2fdc9b510de1
+      size: 161
+    - path: data/processed/stream.parquet
+      hash: md5
+      md5: 02e14dc5f0d989cce4df072afe466476
+      size: 375209
+    - path: data/processed/summary.json
+      hash: md5
+      md5: 53c492457a11d417b1a7c18632a8e56e
+      size: 531
