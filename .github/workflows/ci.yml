@@ -55,9 +55,12 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      # Docker image names must be lowercase; the owner name may not be (e.g. "Sinerror").
+      - name: image name
+        run: echo "IMAGE=ghcr.io/${GITHUB_REPOSITORY,,}/ticket-router" >> "$GITHUB_ENV"
       - uses: docker/build-push-action@v6
         with:
           context: .
           file: docker/service.Dockerfile
           push: ${{ github.ref == 'refs/heads/main' }}
-          tags: ghcr.io/${{ github.repository }}/ticket-router:${{ github.sha }}
+          tags: ${{ env.IMAGE }}:${{ github.sha }},${{ env.IMAGE }}:latest
